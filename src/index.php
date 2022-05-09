@@ -4,9 +4,21 @@ function escapetext($text) {
     return str_replace("\n", "<br>", htmlentities($text));
 }
 
+function my_shell_exec($cmd, &$stdout=null, &$stderr=null) {
+    $proc = proc_open($cmd,[
+        1 => ['pipe','w'],
+        2 => ['pipe','w'],
+    ],$pipes);
+    $stdout = stream_get_contents($pipes[1]);
+    fclose($pipes[1]);
+    $stderr = stream_get_contents($pipes[2]);
+    fclose($pipes[2]);
+    return proc_close($proc);
+}
+
 function exec_command($cmd, $internal = false) {
     try {
-        $shell_exec = shell_exec($cmd);
+        $retval = my_shell_exec($cmd, $shell_exec_stdout, $shell_exec_stderr);
     } catch (Exception $e) {
         if ($internal === true) {
             return $e->getMessage();
@@ -17,6 +29,8 @@ function exec_command($cmd, $internal = false) {
             ]);
         }
     }
+
+    $shell_exec = $shell_exec_stdout . (strlen($shell_exec_stderr) > 0 && strlen($shell_exec_stdout) > 0 ? "\n" . $shell_exec_stderr : $shell_exec_stderr);
 
     if ($internal === true) {
         return $shell_exec;
