@@ -1,4 +1,5 @@
 <?php
+chdir("/coding");
 putenv("HOME=/home/www-data");
 
 function escapetext($text) {

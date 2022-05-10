@@ -7,3 +7,4 @@ COPY src/ /var/www/html/
 RUN chmod u=rw /var/www/html/ -R
 RUN chmod go=r /var/www/html/ -R
 RUN chmod a+x /var/www/html/
+RUN mkdir /coding && chown www-data:www-data -R /coding
