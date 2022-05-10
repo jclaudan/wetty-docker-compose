@@ -1,7 +1,11 @@
 FROM ubuntu
 RUN set Europe/Berlin timezone
 RUN ln -sf /usr/share/zoneinfo/Europe/Berlin /etc/localtime
-RUN apt update && apt install -y openssh-server git vim bash-completion
+RUN apt update && \
+    apt install -y software-properties-common && \
+    apt-add-repository ppa:git-core/ppa && \
+    apt update && \
+    apt install -y openssh-server git vim bash-completion
 RUN sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
 RUN echo "root:Passw0rd" | chpasswd
 ENTRYPOINT service ssh start && bash -c 'while true; do sleep 30; done;'
