@@ -1,4 +1,5 @@
 <?php
+putenv("HOME=/home/www-data");
 
 function escapetext($text) {
     return str_replace("\n", "<br>", htmlentities($text));
