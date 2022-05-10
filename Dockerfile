@@ -1,10 +1,10 @@
-FROM php:7.2-apache
-RUN apt update && apt install -y git
-RUN sed -i 's#www-data:x:33:33:www-data:/var/www:/usr/sbin/nologin#www-data:x:33:33:www-data:/home/www-data:/bin/sh#' /etc/passwd
-RUN mkhomedir_helper www-data
-RUN su www-data -c 'git config --global init.defaultBranch main && git config --global user.email "max.mustermann@example.com" && git config --global user.name "Max Mustermann"'
-COPY src/ /var/www/html/
-RUN chmod u=rw /var/www/html/ -R
-RUN chmod go=r /var/www/html/ -R
-RUN chmod a+x /var/www/html/
-RUN mkdir /coding && chown www-data:www-data -R /coding
+FROM node:0.10
+RUN apt-get update && apt-get install -y git unzip
+RUN git config --global color.ui always \
+    && npm config set color always --global
+ENV WEB_SHELL=bash
+RUN wget "https://github.com/rabchev/web-terminal/archive/refs/heads/master.zip" -O tmp.zip \
+    && unzip -d . tmp.zip \
+    && rm tmp.zip
+RUN npm install web-terminal -g
+ENTRYPOINT [ "web-terminal", "--port", "80" ]
