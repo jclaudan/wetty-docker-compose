@@ -9,5 +9,7 @@ RUN apt update && \
 RUN sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
 RUN echo "root:Passw0rd" | chpasswd
 ENTRYPOINT service ssh start && bash -c 'while true; do sleep 30; done;'
-RUN git config --global init.defaultBranch main && git config --global user.email "max.mustermann@example.com" && git config --global user.name "Max Mustermann"
+RUN git config --global init.defaultBranch main && \
+    git config --global user.email "max.mustermann@example.com" && \
+    git config --global user.name "Max Mustermann"
 RUN echo "source /etc/bash_completion" >> /root/.bashrc
